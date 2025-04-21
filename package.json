@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "npx tsc && node dist/extract.js"
+    "build": "tsc",
+    "start": "tsc && node dist/extract.js"
   },
   "keywords": [],
   "author": "",

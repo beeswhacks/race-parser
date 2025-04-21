@@ -53,10 +53,6 @@ const getColumnForWord = (word, columnMap) => {
     }
     return column;
 };
-const finisherRegexes = new Map([
-    ['POS', /^\s*([\d]{1,2})\s*$/],
-    ['NO', /^\s*([\d]{1,3})[\s*]?$/],
-]);
 // ---------- Main ----------
 async function main(file) {
     const data = new Uint8Array(await fs.promises.readFile(file)); // Convert Buffer to Uint8Array
@@ -70,8 +66,7 @@ async function main(file) {
             .map((i) => {
             const { str, transform } = i;
             const [, , , scaleY, x, y] = transform;
-            const midY = y + scaleY / 2;
-            return { str: str.trim(), x, y: Math.floor(y), midY };
+            return { str: str.trim(), x, y: Math.floor(y), midY: y + scaleY / 2 };
         })
             .filter((w) => w.str);
         // Reconstruct lines of PDF by grouping by Y coordinate and sorting by X
@@ -80,16 +75,18 @@ async function main(file) {
             (lines[w.y] ??= []).push(w);
         for (const k in lines)
             lines[k].sort((a, b) => a.x - b.x);
-        // Get a map of start and end X coordinates for each column
+        // Get a map of columns with x and y coordinates
         const columnMap = getColumnMap(lines, page.getViewport({ scale: 1 }).width);
-        const positions = words
+        // Get map of result rows with x and y coordinates
+        const resultRowMap = words
             .filter((word) => {
             const posColumn = columnMap?.find((c) => c.header === 'POS');
             if (!posColumn) {
                 throw new Error('POS column not found.');
             }
             const xPositionMatch = word.x >= posColumn?.startX && word.x <= posColumn?.endX;
-            const regexMatch = finisherRegexes.get('POS')?.test(word.str);
+            const POSRegex = /^\s*([\d]{1,2})\s*$/;
+            const regexMatch = POSRegex.test(word.str);
             return xPositionMatch && regexMatch;
         })
             .sort((a, b) => a.y - b.y)
@@ -98,15 +95,16 @@ async function main(file) {
             startY: position.y,
             endY: positions[index + 1] ? positions[index + 1].y : position.y + 15,
         }));
-        const raceDataRecords = {};
+        // Pick out words that belong to result rows and data columns - ignore all other text
+        const rawResults = {};
         for (const w of words) {
-            const position = positions.find((p) => w.midY < p.endY && w.midY >= p.startY);
-            //   const column = columnMap?.find((c) => w.x < c.endX && w.x >= c.startX);
+            const position = resultRowMap.find((p) => w.midY < p.endY && w.midY >= p.startY);
             if (position) {
-                (raceDataRecords[position.position] ??= []).push(w);
+                (rawResults[position.position] ??= []).push(w);
             }
         }
-        const parsedRecords = Object.entries(raceDataRecords).map(([pos, words]) => {
+        // Parse the result rows to objects
+        const parsedResults = Object.entries(rawResults).map(([pos, words]) => {
             const entries = words.map((w) => {
                 const key = getColumnForWord(w, columnMap)?.header.toLowerCase();
                 const value = w.str;
@@ -115,7 +113,7 @@ async function main(file) {
             const row = Object.fromEntries(entries);
             return row;
         });
-        rows.push(...parsedRecords);
+        rows.push(...parsedResults);
     }
     // ---------- Output ----------
     const out = path.basename(file, path.extname(file)) + '.json';
