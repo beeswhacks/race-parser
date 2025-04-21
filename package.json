@@ -5,7 +5,8 @@
   "main": "src/parseRacePdf.js",
   "scripts": {
     "build": "tsc",
-    "start": "tsc && node dist/cli.js"
+    "start": "tsc && node dist/cli.js",
+    "start:dist": "node dist/cli.js"
   },
   "keywords": [],
   "author": "",
