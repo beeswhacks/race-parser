@@ -29,3 +29,7 @@ At this point, our task is complete - we've parsed unstructured string fragments
     - The POS column is used to identify rows, assuming they are the first column and contain a 1 or 2 digit number.
     - Only the fields POS, NO, CL, PIC, NAME, ENTRY, BEST, TIME, ON, LAPS, GAP, DIFF, and MPH are parsed. Other columns are ignored.
 - The parser uses the column headers from the sheet to name the keys in the output JSON. If NO was misspelt NUM, the output key would be NUM, and NO would be undefined. This could be easily accomodated by creating a mapping e.g. `[NUM, NO] -> NO`.
+
+# Usage
+
+Install globally and run as CLI

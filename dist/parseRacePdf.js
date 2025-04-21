@@ -1,17 +1,4 @@
-#!/usr/bin/env ts-node
-import fs from 'fs';
-import path from 'path';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
-// ---------- CLI ----------
-if (process.argv.length < 3) {
-    console.error('Usage: extract <file.pdf>');
-    process.exit(1);
-}
-const pdfPath = process.argv[2];
-main(pdfPath).catch((err) => {
-    console.error(err);
-    process.exit(1);
-});
 // ---------- Helpers ----------
 const getColumnMap = (lines, pageWidth) => {
     for (const line of Object.values(lines)) {
@@ -53,9 +40,7 @@ const getColumnForWord = (word, columnMap) => {
     }
     return column;
 };
-// ---------- Main ----------
-async function main(file) {
-    const data = new Uint8Array(await fs.promises.readFile(file)); // Convert Buffer to Uint8Array
+export default async function parseRacePdf(data) {
     const pdf = await getDocument({ data }).promise;
     const rows = [];
     for (let p = 1; p <= pdf.numPages; p++) {
@@ -115,9 +100,6 @@ async function main(file) {
         });
         rows.push(...parsedResults);
     }
-    // ---------- Output ----------
-    const out = path.basename(file, path.extname(file)) + '.json';
-    await fs.promises.writeFile(out, JSON.stringify(rows, null, 2));
-    console.log(`✓  ${out}`);
+    return rows;
 }
-//# sourceMappingURL=extract.js.map
+//# sourceMappingURL=parseRacePdf.js.map

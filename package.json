@@ -1,16 +1,19 @@
 {
-  "name": "race-classification-parser",
+  "name": "race-parser",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/parseRacePdf.js",
   "scripts": {
     "build": "tsc",
-    "start": "tsc && node dist/extract.js"
+    "start": "tsc && node dist/cli.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
+  "bin": {
+    "race-class-parser": "dist/cli.js"
+  },
   "dependencies": {
     "pdfjs-dist": "^5.1.91",
     "tesseract.js": "^6.0.1"
