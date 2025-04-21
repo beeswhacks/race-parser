@@ -1,10 +1,10 @@
-This package parses a PDF of a race classification sheet to JSON array.
+This package converts a race classification PDF into JSON array of results.
 
 # Problem
 
-Race sheets are provided as PDFs, which are easy for humans but messy for computers to read. The text content of a PDF is essentially just a set of string fragments with **(x, y)** coordinates. How these strings relate to teach other is apparent to humans but is not encoded in the PDF.
+Race sheets are provided as PDFs, which are easy for humans to read but messy for code. A PDF stores text conten as a set of string fragments with **(x, y)** coordinates. How these strings relate to teach other is obvious to humans but is not encoded in the PDF.
 
-There are a few challenge to parsing these particular PDFs: columns are not always in the same order, columns are not consistently aligned, and some columns overhang their headers.
+There are a few challenge to parsing these particular PDFs: the column order varies, columns are not consistently or perfectly aligned, and some columns overhang their headers.
 
 # Approach
 
@@ -22,14 +22,55 @@ We loop through the result rows, assigning each word to a column by finding the 
 
 At this point, our task is complete - we've parsed unstructured string fragments with coordinates into rows and columns!
 
-# Weaknesses
-- The PDFs are not in an exactly consistent format, which is challenging. Some tweaks have had to be made to 
-- Assumes PDFs are vector text, not scanned image. To parse a scanned image, you would need to add optical character recognition (OCR).
-- The parser relies on a few assumptions in the data. If these assumptions are violated then the parser will behave unexepectedly. For example:
-    - The POS column is used to identify rows, assuming they are the first column and contain a 1 or 2 digit number.
-    - Only the fields POS, NO, CL, PIC, NAME, ENTRY, BEST, TIME, ON, LAPS, GAP, DIFF, and MPH are parsed. Other columns are ignored.
-- The parser uses the column headers from the sheet to name the keys in the output JSON. If NO was misspelt NUM, the output key would be NUM, and NO would be undefined. This could be easily accomodated by creating a mapping e.g. `[NUM, NO] -> NO`.
+## Weaknesses & assumptions
+* Works only on **vector‑text** PDFs (scans would need OCR).
+* Relies on the presence and correct spelling of the header tokens.
+* Assumes `POS` is the first column and is numeric (1–2 digits).
+* Ignores any fields beyond `POS, NO, CL, PIC, NAME, ENTRY, BEST, TIME, ON, LAPS, GAP, DIFF, MPH`.
+* Heuristic to correctly scan `PIC` (single‑digit, right‑aligned) could mis‑label edge‑cases.
 
 # Usage
 
-Install globally and run as CLI
+## CLI
+
+You have two options for running from the command line: install the package locally and run it in the repo, or install it globally and run it from anywhere.
+
+### Local
+
+1. Clone the repo and `npm install`.
+2. Run `npm start -- /path/to/pdf.pdf`.
+
+```shell
+# setup
+npm install           # setup
+npm start -- --help   # usage
+npm start -- in.pdf out.json
+```
+
+### Global
+
+Alternatively:
+1. Clone the repo and `npm install -g`.
+2. Run `race-parser` as a CLI tool.
+
+```shell
+# setup
+npm install -g      # setup
+race-parser --help  # usage  
+race-parser in.pdf out.json
+```
+
+## JavaScript module
+
+You can also import the module and call it from a Node application, AWS Lambda function etc.
+
+```javascript
+import { parseRacePdf } from "race-parser/dist/parseRacePdf.js";
+const rows = await parseRacePdf(buffer);
+```
+
+If it would be useful, it's possible to publish this package to the npm registry (it's a free service). This hosts the package on npm and abstracts away some of the details of installing and importing the package. So you could install it using `npm i race-parser`, and call it as follows:
+
+```javascript
+import { parseRacePdf } from "race-parser";
+```
