@@ -12,7 +12,7 @@
   "license": "ISC",
   "type": "module",
   "bin": {
-    "race-class-parser": "dist/cli.js"
+    "race-parser": "dist/cli.js"
   },
   "dependencies": {
     "pdfjs-dist": "^5.1.91",
